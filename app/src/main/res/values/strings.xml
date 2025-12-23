@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NoteX</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_archive">Archive</string>
+    <string name="nav_trash">Trash</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_folders">Folders</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">My Notes</string>
+    <string name="home_empty_title">No notes yet</string>
+    <string name="home_empty_subtitle">Tap + to create your first note</string>
+    <string name="home_search_placeholder">Search notes...</string>
+    <string name="home_pinned">Pinned</string>
+    <string name="home_others">Others</string>
+
+    <!-- Note Actions -->
+    <string name="action_pin">Pin</string>
+    <string name="action_unpin">Unpin</string>
+    <string name="action_archive">Archive</string>
+    <string name="action_unarchive">Unarchive</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_restore">Restore</string>
+    <string name="action_delete_forever">Delete forever</string>
+    <string name="action_move_to_folder">Move to folder</string>
+    <string name="action_share">Share</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_duplicate">Duplicate</string>
+
+    <!-- Editor -->
+    <string name="editor_title_hint">Title</string>
+    <string name="editor_content_hint">Start writing...</string>
+    <string name="editor_unsaved">Unsaved changes</string>
+    <string name="editor_save">Save</string>
+    <string name="editor_discard">Discard</string>
+    <string name="editor_discard_dialog_title">Discard changes?</string>
+    <string name="editor_discard_dialog_message">You have unsaved changes. Are you sure you want to discard them?</string>
+
+    <!-- Folders -->
+    <string name="folders_title">Folders</string>
+    <string name="folders_all_notes">All Notes</string>
+    <string name="folders_uncategorized">Uncategorized</string>
+    <string name="folder_create">Create folder</string>
+    <string name="folder_rename">Rename folder</string>
+    <string name="folder_delete">Delete folder</string>
+    <string name="folder_name_hint">Folder name</string>
+
+    <!-- Archive -->
+    <string name="archive_title">Archive</string>
+    <string name="archive_empty_title">Archive is empty</string>
+    <string name="archive_empty_subtitle">Archived notes will appear here</string>
+
+    <!-- Trash -->
+    <string name="trash_title">Trash</string>
+    <string name="trash_empty_title">Trash is empty</string>
+    <string name="trash_empty_subtitle">Deleted notes will appear here</string>
+    <string name="trash_auto_delete">Notes in trash will be permanently deleted after 30 days</string>
+    <string name="trash_empty_all">Empty trash</string>
+    <string name="trash_empty_confirm_title">Empty trash?</string>
+    <string name="trash_empty_confirm_message">All notes in trash will be permanently deleted. This action cannot be undone.</string>
+
+    <!-- Search -->
+    <string name="search_title">Search</string>
+    <string name="search_hint">Search notes...</string>
+    <string name="search_no_results">No notes found</string>
+    <string name="search_recent">Recent searches</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_dynamic_colors">Dynamic colors</string>
+    <string name="settings_dynamic_colors_desc">Use colors from your wallpaper</string>
+    <string name="settings_view">Default view</string>
+    <string name="settings_view_grid">Grid</string>
+    <string name="settings_view_list">List</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_backup">Backup</string>
+    <string name="settings_backup_desc">Export all notes to a file</string>
+    <string name="settings_restore">Restore</string>
+    <string name="settings_restore_desc">Import notes from a backup file</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_developer">Developer</string>
+    <string name="settings_rate">Rate app</string>
+    <string name="settings_feedback">Send feedback</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_title_1">Welcome to NoteX</string>
+    <string name="onboarding_desc_1">Your minimal, fast, and beautiful note-taking companion</string>
+    <string name="onboarding_title_2">Organize Your Thoughts</string>
+    <string name="onboarding_desc_2">Create folders, pin important notes, and find anything instantly</string>
+    <string name="onboarding_title_3">Rich Text &amp; Markdown</string>
+    <string name="onboarding_desc_3">Format your notes with rich text editing and markdown support</string>
+    <string name="onboarding_title_4">Your Data, Your Control</string>
+    <string name="onboarding_desc_4">All notes are stored locally. Backup and restore anytime</string>
+
+    <!-- Crash Screen -->
+    <string name="crash_title">Something went wrong</string>
+    <string name="crash_copy">Copy</string>
+    <string name="crash_restart">Restart</string>
+    <string name="crash_copied">Crash log copied to clipboard</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="close">Close</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="create">Create</string>
+    <string name="note">Note</string>
+    <string name="notes">Notes</string>
+    <string name="folder">Folder</string>
+    <string name="folders">Folders</string>
+    <string name="selected">%d selected</string>
+    <string name="loading">Loading...</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+    <string name="note_created">Note created</string>
+    <string name="note_updated">Note saved</string>
+    <string name="note_deleted">Note moved to trash</string>
+    <string name="note_archived">Note archived</string>
+    <string name="note_restored">Note restored</string>
+    <string name="undo">Undo</string>
+</resources>
