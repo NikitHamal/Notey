@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.GridView
@@ -30,7 +30,6 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,13 +61,15 @@ import com.notex.sd.R
 import com.notex.sd.core.preferences.SortOrder
 import com.notex.sd.core.preferences.ViewMode
 import com.notex.sd.domain.model.Note
-import com.notex.sd.domain.model.NoteColor
 import com.notex.sd.ui.components.common.EmptyState
 import com.notex.sd.ui.components.common.LoadingIndicator
 import com.notex.sd.ui.components.dialog.ColorPickerDialog
 import com.notex.sd.ui.components.drawer.NoteXDrawer
 import com.notex.sd.ui.components.note.NoteCardLayout
 import com.notex.sd.ui.components.note.NotesList
+import com.notex.sd.ui.components.quickaction.QuickActionsFab
+import com.notex.sd.ui.components.quickaction.QuickActionsChipRow
+import com.notex.sd.ui.components.template.TemplatePickerSheet
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,12 +84,14 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val createdNoteId by viewModel.createdNoteId.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Selected note for actions
-    var selectedNote by rememberSaveable { mutableStateOf<Note?>(null) }
+    // Selected note for actions - store only ID to avoid Bundle serialization issues
+    var selectedNoteId by rememberSaveable { mutableStateOf<String?>(null) }
+    val selectedNote = selectedNoteId?.let { id -> uiState.notes.find { it.id == id } }
     var showActionSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
@@ -96,13 +99,24 @@ fun HomeScreen(
     var showColorPicker by rememberSaveable { mutableStateOf(false) }
 
     // Sort order dropdown
-    var showSortMenu by rememberSaveable { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
+
+    // Template picker
+    var showTemplatePicker by rememberSaveable { mutableStateOf(false) }
 
     // Handle error messages
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             snackbarHostState.showSnackbar(error)
             viewModel.clearError()
+        }
+    }
+
+    // Navigate to editor when note is created from template
+    LaunchedEffect(createdNoteId) {
+        createdNoteId?.let { noteId ->
+            viewModel.clearCreatedNoteId()
+            onNavigateToEditor(noteId)
         }
     }
 
@@ -247,16 +261,15 @@ fun HomeScreen(
                     enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
                     exit = fadeOut() + slideOutVertically(targetOffsetY = { it })
                 ) {
-                    FloatingActionButton(
-                        onClick = { onNavigateToEditor(null) },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Create note"
-                        )
-                    }
+                    QuickActionsFab(
+                        onNewNote = { onNavigateToEditor(null) },
+                        onNewChecklist = {
+                            // Navigate to editor with checklist mode
+                            // The editor will handle creating a checklist note
+                            onNavigateToEditor(null)
+                        },
+                        onOpenTemplates = { showTemplatePicker = true }
+                    )
                 }
             },
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -294,7 +307,7 @@ fun HomeScreen(
                                 onNavigateToEditor(note.id)
                             },
                             onNoteLongClick = { note ->
-                                selectedNote = note
+                                selectedNoteId = note.id
                                 showActionSheet = true
                             },
                             emptyStateTitle = stringResource(R.string.home_empty_title),
@@ -313,34 +326,40 @@ fun HomeScreen(
         ModalBottomSheet(
             onDismissRequest = {
                 showActionSheet = false
-                selectedNote = null
+                selectedNoteId = null
             },
             sheetState = sheetState
         ) {
             NoteActionsBottomSheet(
                 note = selectedNote!!,
                 onPin = {
-                    viewModel.togglePin(selectedNote!!.id, selectedNote!!.isPinned)
+                    selectedNote?.let { note ->
+                        viewModel.togglePin(note.id, note.isPinned)
+                    }
                     scope.launch {
                         sheetState.hide()
                         showActionSheet = false
-                        selectedNote = null
+                        selectedNoteId = null
                     }
                 },
                 onArchive = {
-                    viewModel.archiveNote(selectedNote!!.id, selectedNote!!.isArchived)
+                    selectedNote?.let { note ->
+                        viewModel.archiveNote(note.id, note.isArchived)
+                    }
                     scope.launch {
                         sheetState.hide()
                         showActionSheet = false
-                        selectedNote = null
+                        selectedNoteId = null
                     }
                 },
                 onDelete = {
-                    viewModel.moveToTrash(selectedNote!!.id)
+                    selectedNote?.let { note ->
+                        viewModel.moveToTrash(note.id)
+                    }
                     scope.launch {
                         sheetState.hide()
                         showActionSheet = false
-                        selectedNote = null
+                        selectedNoteId = null
                     }
                 },
                 onChangeColor = {
@@ -350,7 +369,7 @@ fun HomeScreen(
                     scope.launch {
                         sheetState.hide()
                         showActionSheet = false
-                        selectedNote = null
+                        selectedNoteId = null
                     }
                 }
             )
@@ -360,19 +379,33 @@ fun HomeScreen(
     // Color picker dialog
     if (showColorPicker && selectedNote != null) {
         ColorPickerDialog(
-            currentColor = selectedNote!!.color,
+            currentColor = selectedNote.color,
             onColorSelected = { color ->
-                viewModel.updateNoteColor(selectedNote!!.id, color)
+                selectedNote?.let { note ->
+                    viewModel.updateNoteColor(note.id, color)
+                }
                 showColorPicker = false
                 scope.launch {
                     sheetState.hide()
                     showActionSheet = false
-                    selectedNote = null
+                    selectedNoteId = null
                 }
             },
             onDismiss = {
                 showColorPicker = false
             }
+        )
+    }
+
+    // Template picker sheet
+    if (showTemplatePicker) {
+        TemplatePickerSheet(
+            onTemplateSelected = { note ->
+                showTemplatePicker = false
+                // Save the note from template and navigate to editor
+                viewModel.createNoteFromTemplate(note)
+            },
+            onDismiss = { showTemplatePicker = false }
         )
     }
 }

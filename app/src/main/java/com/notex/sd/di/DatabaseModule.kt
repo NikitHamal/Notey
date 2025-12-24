@@ -6,6 +6,7 @@ import com.notex.sd.data.database.NoteXDatabase
 import com.notex.sd.data.database.dao.ChecklistItemDao
 import com.notex.sd.data.database.dao.FolderDao
 import com.notex.sd.data.database.dao.NoteDao
+import com.notex.sd.data.database.dao.NoteLinkDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,5 +48,11 @@ object DatabaseModule {
     @Singleton
     fun provideChecklistItemDao(database: NoteXDatabase): ChecklistItemDao {
         return database.checklistItemDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNoteLinkDao(database: NoteXDatabase): NoteLinkDao {
+        return database.noteLinkDao()
     }
 }

@@ -94,6 +94,15 @@ class CreateNoteUseCase @Inject constructor(
     }
 }
 
+class InsertNoteUseCase @Inject constructor(
+    private val repository: NoteRepository
+) {
+    suspend operator fun invoke(note: Note): String {
+        repository.insertNote(note)
+        return note.id
+    }
+}
+
 class UpdateNoteUseCase @Inject constructor(
     private val repository: NoteRepository
 ) {
