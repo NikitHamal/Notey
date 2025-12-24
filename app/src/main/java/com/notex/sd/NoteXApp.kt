@@ -11,6 +11,6 @@ class NoteXApp : Application() {
         super.onCreate()
 
         // Install crash handler for debugging
-        CrashHandler.install(this)
+        CrashHandler.initialize(this)
     }
 }

@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -133,7 +134,7 @@ class HomeViewModel @Inject constructor(
     fun toggleViewMode() {
         viewModelScope.launch {
             try {
-                val currentMode = appPreferences.viewMode.value
+                val currentMode = appPreferences.viewMode.first()
                 val newMode = when (currentMode) {
                     ViewMode.GRID -> ViewMode.LIST
                     ViewMode.LIST -> ViewMode.GRID

@@ -72,8 +72,9 @@ fun NoteCard(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = remember(note.color, isSystemInDarkTheme()) {
-        getNoteColorBackground(note.color, isSystemInDarkTheme())
+    val isDark = isSystemInDarkTheme()
+    val backgroundColor = remember(note.color, isDark) {
+        getNoteColorBackgroundStatic(note.color, isDark)
     }
 
     val formattedDate = remember(note.modifiedAt) {
@@ -98,116 +99,130 @@ fun NoteCard(
             defaultElevation = if (isSelected) 4.dp else 1.dp
         )
     ) {
-        Box {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                // Header with pin indicator and color
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    // Color indicator
-                    if (note.color != NoteColor.DEFAULT) {
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .clip(CircleShape)
-                                .background(getColorIndicator(note.color))
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-
-                    // Title
-                    if (note.title.isNotBlank()) {
-                        Text(
-                            text = note.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = if (layout == NoteCardLayout.GRID) 2 else 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    // Pin indicator
-                    if (note.isPinned) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(
-                            imageVector = Icons.Default.PushPin,
-                            contentDescription = "Pinned",
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-
-                // Content preview
-                if (note.plainTextContent.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = note.preview,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = if (layout == NoteCardLayout.GRID) 6 else 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                // Footer with timestamp
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = formattedDate,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Word count (for list layout)
-                    if (layout == NoteCardLayout.LIST && note.wordCount > 0) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "•",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${note.wordCount} words",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            // Selection indicator
-            AnimatedVisibility(
-                visible = isSelected,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier.align(Alignment.TopEnd)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Selected",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(24.dp)
-                )
-            }
-        }
+        NoteCardContent(
+            note = note,
+            isSelected = isSelected,
+            layout = layout,
+            formattedDate = formattedDate
+        )
     }
 }
 
 @Composable
-private fun getNoteColorBackground(color: NoteColor, isDark: Boolean): Color {
+private fun NoteCardContent(
+    note: Note,
+    isSelected: Boolean,
+    layout: NoteCardLayout,
+    formattedDate: String
+) {
+    Box {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Header with pin indicator and color
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                // Color indicator
+                if (note.color != NoteColor.DEFAULT) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(CircleShape)
+                            .background(getColorIndicator(note.color))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+
+                // Title
+                if (note.title.isNotBlank()) {
+                    Text(
+                        text = note.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = if (layout == NoteCardLayout.GRID) 2 else 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // Pin indicator
+                if (note.isPinned) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.Default.PushPin,
+                        contentDescription = "Pinned",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            // Content preview
+            if (note.plainTextContent.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = note.preview,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = if (layout == NoteCardLayout.GRID) 6 else 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Footer with timestamp
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = formattedDate,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // Word count (for list layout)
+                if (layout == NoteCardLayout.LIST && note.wordCount > 0) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "${note.wordCount} words",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        // Selection indicator
+        androidx.compose.animation.AnimatedVisibility(
+            visible = isSelected,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = "Selected",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(24.dp)
+            )
+        }
+    }
+}
+
+private fun getNoteColorBackgroundStatic(color: NoteColor, isDark: Boolean): Color {
     return when (color) {
         NoteColor.DEFAULT -> Color.Transparent
         NoteColor.YELLOW -> if (isDark) NoteYellowDark else NoteYellow

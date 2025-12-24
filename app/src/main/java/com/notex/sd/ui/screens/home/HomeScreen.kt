@@ -10,11 +10,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material.icons.outlined.NoteAdd
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -102,7 +110,13 @@ fun HomeScreen(
         drawerState = drawerState,
         drawerContent = {
             NoteXDrawer(
-                onNavigateToHome = {
+                currentRoute = "all_notes",
+                selectedFolderId = null,
+                folders = emptyList(),
+                allNotesCount = uiState.notes.size,
+                archivedCount = 0,
+                trashedCount = 0,
+                onNavigateToAllNotes = {
                     scope.launch { drawerState.close() }
                 },
                 onNavigateToArchive = {
@@ -117,7 +131,7 @@ fun HomeScreen(
                     scope.launch { drawerState.close() }
                     onNavigateToSettings()
                 },
-                onNavigateToFolder = { folderId ->
+                onFolderSelected = { folderId ->
                     scope.launch { drawerState.close() }
                     onNavigateToFolder(folderId)
                 }
@@ -168,7 +182,7 @@ fun HomeScreen(
                         Box {
                             IconButton(onClick = { showSortMenu = true }) {
                                 Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Default.Sort,
+                                    imageVector = Icons.Default.Sort,
                                     contentDescription = "Sort"
                                 )
                             }
@@ -377,7 +391,7 @@ private fun NoteActionsBottomSheet(
     ) {
         // Pin/Unpin action
         BottomSheetAction(
-            icon = androidx.compose.material.icons.Icons.Default.PushPin,
+            icon = Icons.Default.PushPin,
             text = stringResource(if (note.isPinned) R.string.action_unpin else R.string.action_pin),
             onClick = {
                 onPin()
@@ -387,7 +401,7 @@ private fun NoteActionsBottomSheet(
 
         // Archive action
         BottomSheetAction(
-            icon = androidx.compose.material.icons.Icons.Default.Archive,
+            icon = Icons.Default.Archive,
             text = stringResource(R.string.action_archive),
             onClick = {
                 onArchive()
@@ -397,7 +411,7 @@ private fun NoteActionsBottomSheet(
 
         // Change color action
         BottomSheetAction(
-            icon = androidx.compose.material.icons.Icons.Default.Palette,
+            icon = Icons.Default.Palette,
             text = "Change color",
             onClick = {
                 onChangeColor()
@@ -406,7 +420,7 @@ private fun NoteActionsBottomSheet(
 
         // Delete action
         BottomSheetAction(
-            icon = androidx.compose.material.icons.Icons.Default.Delete,
+            icon = Icons.Default.Delete,
             text = stringResource(R.string.action_delete),
             onClick = {
                 onDelete()
@@ -430,7 +444,7 @@ private fun BottomSheetAction(
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
-        androidx.compose.foundation.layout.Row(
+        Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -439,7 +453,7 @@ private fun BottomSheetAction(
                 contentDescription = text,
                 tint = tint
             )
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyLarge,

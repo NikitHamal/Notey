@@ -87,33 +87,57 @@ class SettingsViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<SettingsUiState> = combine(
-        appPreferences.themeMode,
-        appPreferences.dynamicColors,
-        appPreferences.viewMode,
-        appPreferences.sortOrder,
-        appPreferences.editorFontSize,
-        appPreferences.autoSave,
-        appPreferences.showWordCount,
-        _isLoading,
-        _error,
-        _backupStatus
-    ) { themeMode, dynamicColors, viewMode, sortOrder, fontSize, autoSave, showWordCount, isLoading, error, backupStatus ->
+        combine(
+            appPreferences.themeMode,
+            appPreferences.dynamicColors,
+            appPreferences.viewMode,
+            appPreferences.sortOrder,
+            appPreferences.editorFontSize
+        ) { themeMode, dynamicColors, viewMode, sortOrder, fontSize ->
+            SettingsPartial1(themeMode, dynamicColors, viewMode, sortOrder, fontSize)
+        },
+        combine(
+            appPreferences.autoSave,
+            appPreferences.showWordCount,
+            _isLoading,
+            _error,
+            _backupStatus
+        ) { autoSave, showWordCount, isLoading, error, backupStatus ->
+            SettingsPartial2(autoSave, showWordCount, isLoading, error, backupStatus)
+        }
+    ) { partial1, partial2 ->
         SettingsUiState(
-            themeMode = themeMode,
-            dynamicColors = dynamicColors,
-            viewMode = viewMode,
-            sortOrder = sortOrder,
-            editorFontSize = fontSize,
-            autoSave = autoSave,
-            showWordCount = showWordCount,
-            isLoading = isLoading,
-            error = error,
-            backupStatus = backupStatus
+            themeMode = partial1.themeMode,
+            dynamicColors = partial1.dynamicColors,
+            viewMode = partial1.viewMode,
+            sortOrder = partial1.sortOrder,
+            editorFontSize = partial1.editorFontSize,
+            autoSave = partial2.autoSave,
+            showWordCount = partial2.showWordCount,
+            isLoading = partial2.isLoading,
+            error = partial2.error,
+            backupStatus = partial2.backupStatus
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SettingsUiState()
+    )
+
+    private data class SettingsPartial1(
+        val themeMode: ThemeMode,
+        val dynamicColors: Boolean,
+        val viewMode: ViewMode,
+        val sortOrder: SortOrder,
+        val editorFontSize: Int
+    )
+
+    private data class SettingsPartial2(
+        val autoSave: Boolean,
+        val showWordCount: Boolean,
+        val isLoading: Boolean,
+        val error: String?,
+        val backupStatus: BackupStatus?
     )
 
     fun setThemeMode(mode: ThemeMode) {

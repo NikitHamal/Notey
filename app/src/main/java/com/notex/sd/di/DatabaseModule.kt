@@ -27,7 +27,7 @@ object DatabaseModule {
             NoteXDatabase::class.java,
             NoteXDatabase.DATABASE_NAME
         )
-            .fallbackToDestructiveMigration(false)
+            .fallbackToDestructiveMigration()
             .build()
     }
 
