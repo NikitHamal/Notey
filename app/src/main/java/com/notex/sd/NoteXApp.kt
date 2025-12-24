@@ -9,6 +9,8 @@ class NoteXApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        CrashHandler.initialize(this)
+
+        // Install crash handler for debugging
+        CrashHandler.install(this)
     }
 }

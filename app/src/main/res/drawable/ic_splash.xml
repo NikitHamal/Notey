@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+
+    <!-- Circle background -->
+    <path
+        android:pathData="M144,144m-100,0a100,100 0,1 1,200 0a100,100 0,1 1,-200 0"
+        android:fillColor="#6750A4"/>
+
+    <!-- Letter N - Modern geometric design -->
+    <!-- Left vertical bar -->
+    <path
+        android:pathData="M94,94L94,194L114,194L114,94Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Diagonal connector -->
+    <path
+        android:pathData="M94,94L114,94L194,194L174,194Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Right vertical bar -->
+    <path
+        android:pathData="M174,94L174,194L194,194L194,94Z"
+        android:fillColor="#FFFFFF"/>
+
+</vector>
