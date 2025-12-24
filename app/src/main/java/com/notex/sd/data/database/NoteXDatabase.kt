@@ -1,6 +1,5 @@
 package com.notex.sd.data.database
 
-import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.notex.sd.data.database.dao.ChecklistItemDao
@@ -12,6 +11,16 @@ import com.notex.sd.data.database.entity.FolderEntity
 import com.notex.sd.data.database.entity.NoteEntity
 import com.notex.sd.data.database.entity.NoteLinkEntity
 
+/**
+ * Main database class for the Notey app.
+ *
+ * Uses manual migrations for production reliability. Schema is exported
+ * for migration testing and validation.
+ *
+ * Version History:
+ * - v1: Initial schema (notes, folders, checklist_items)
+ * - v2: Added note_links table for wiki-style linking
+ */
 @Database(
     entities = [
         NoteEntity::class,
@@ -20,10 +29,7 @@ import com.notex.sd.data.database.entity.NoteLinkEntity
         NoteLinkEntity::class
     ],
     version = 2,
-    exportSchema = true,
-    autoMigrations = [
-        AutoMigration(from = 1, to = 2)
-    ]
+    exportSchema = true
 )
 abstract class NoteXDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
