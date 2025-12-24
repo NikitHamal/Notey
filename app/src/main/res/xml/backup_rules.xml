@@ -2,5 +2,5 @@
 <full-backup-content>
     <include domain="sharedpref" path="." />
     <include domain="database" path="." />
-    <exclude domain="sharedpref" path="datastore/app_preferences.preferences_pb" />
+    <exclude domain="file" path="datastore/app_preferences.preferences_pb" />
 </full-backup-content>
