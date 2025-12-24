@@ -8,6 +8,7 @@ Transform Notey into a professional, production-grade note-taking app rivaling N
 - Add unique USP features: Smart templates, note linking, quick actions [DONE]
 - Performance optimization: Fast, responsive, efficient [DONE]
 - Code quality: Modular (500-1000 LOC/file), production-grade [DONE]
+- Fix KSP migration build error [DONE]
 
 ## Constraints/Assumptions:
 - Kotlin + Jetpack Compose (existing stack)
@@ -23,6 +24,7 @@ Transform Notey into a professional, production-grade note-taking app rivaling N
 - Add Quick Actions system for fast note creation [IMPLEMENTED]
 - Implement Smart Templates with categories [IMPLEMENTED]
 - Create compact, modern card design with better information density [EXISTING]
+- Use manual migrations instead of AutoMigration for production reliability [IMPLEMENTED]
 
 ## State:
 - Done:
@@ -40,6 +42,7 @@ Transform Notey into a professional, production-grade note-taking app rivaling N
   - HomeScreen integration with Quick Actions FAB and Template picker
   - HomeViewModel with createNoteFromTemplate() method
   - Performance optimization - already using lazy loading, derivedStateOf, remember()
+  - Fixed KSP build error: Created v1 schema JSON and manual migration class
 
 - Now:
   - COMPLETED - All core features implemented
@@ -59,12 +62,14 @@ Transform Notey into a professional, production-grade note-taking app rivaling N
 - app/src/main/java/com/notex/sd/data/database/dao/NoteLinkDao.kt - DAO for note links
 - app/src/main/java/com/notex/sd/ui/components/quickaction/QuickActionsBar.kt - Quick actions UI
 - app/src/main/java/com/notex/sd/ui/components/template/TemplatePickerSheet.kt - Template picker UI
+- app/src/main/java/com/notex/sd/data/database/migration/DatabaseMigrations.kt - Manual migration class
+- app/schemas/com.notex.sd.data.database.NoteXDatabase/1.json - Version 1 schema for migration
 
 ## Files Modified:
 - app/src/main/java/com/notex/sd/ui/screens/home/HomeScreen.kt - Fixed crash, added Quick Actions FAB, Template picker
 - app/src/main/java/com/notex/sd/ui/screens/debug/CrashActivity.kt - Fixed button visibility
-- app/src/main/java/com/notex/sd/data/database/NoteXDatabase.kt - Added NoteLinkEntity, v2 migration
-- app/src/main/java/com/notex/sd/di/DatabaseModule.kt - Added NoteLinkDao provider
+- app/src/main/java/com/notex/sd/data/database/NoteXDatabase.kt - Removed AutoMigration, uses manual migration
+- app/src/main/java/com/notex/sd/di/DatabaseModule.kt - Added NoteLinkDao provider, manual migrations
 - app/src/main/java/com/notex/sd/ui/screens/home/HomeViewModel.kt - Added createNoteFromTemplate(), InsertNoteUseCase
 - app/src/main/java/com/notex/sd/domain/usecase/NoteUseCases.kt - Added InsertNoteUseCase
 
@@ -85,3 +90,5 @@ Transform Notey into a professional, production-grade note-taking app rivaling N
 - DatabaseModule.kt [UPDATED]
 - HomeViewModel.kt [UPDATED]
 - NoteUseCases.kt [UPDATED]
+- DatabaseMigrations.kt [NEW]
+- 1.json schema [NEW]

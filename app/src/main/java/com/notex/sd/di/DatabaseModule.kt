@@ -7,6 +7,7 @@ import com.notex.sd.data.database.dao.ChecklistItemDao
 import com.notex.sd.data.database.dao.FolderDao
 import com.notex.sd.data.database.dao.NoteDao
 import com.notex.sd.data.database.dao.NoteLinkDao
+import com.notex.sd.data.database.migration.DatabaseMigrations
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,7 +29,7 @@ object DatabaseModule {
             NoteXDatabase::class.java,
             NoteXDatabase.DATABASE_NAME
         )
-            .fallbackToDestructiveMigration()
+            .addMigrations(*DatabaseMigrations.ALL_MIGRATIONS)
             .build()
     }
 
