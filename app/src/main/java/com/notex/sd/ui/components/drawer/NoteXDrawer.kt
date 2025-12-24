@@ -160,7 +160,7 @@ fun NoteXDrawer(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Divider(modifier = Modifier.padding(horizontal = 16.dp))
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
             // Settings
             NavigationDrawerItem(
