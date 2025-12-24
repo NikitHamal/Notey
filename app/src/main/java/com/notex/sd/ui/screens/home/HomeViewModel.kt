@@ -9,6 +9,7 @@ import com.notex.sd.domain.model.Note
 import com.notex.sd.domain.model.NoteColor
 import com.notex.sd.domain.usecase.GetAllNotesUseCase
 import com.notex.sd.domain.usecase.GetNotesCountUseCase
+import com.notex.sd.domain.usecase.InsertNoteUseCase
 import com.notex.sd.domain.usecase.MoveToTrashUseCase
 import com.notex.sd.domain.usecase.ToggleArchiveUseCase
 import com.notex.sd.domain.usecase.TogglePinUseCase
@@ -29,6 +30,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val getAllNotesUseCase: GetAllNotesUseCase,
     private val getNotesCountUseCase: GetNotesCountUseCase,
+    private val insertNoteUseCase: InsertNoteUseCase,
     private val togglePinUseCase: TogglePinUseCase,
     private val moveToTrashUseCase: MoveToTrashUseCase,
     private val toggleArchiveUseCase: ToggleArchiveUseCase,
@@ -38,6 +40,9 @@ class HomeViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
+
+    private val _createdNoteId = MutableStateFlow<String?>(null)
+    val createdNoteId: StateFlow<String?> = _createdNoteId.asStateFlow()
 
     val uiState: StateFlow<HomeUiState> = combine(
         appPreferences.viewMode,
@@ -173,5 +178,20 @@ class HomeViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun createNoteFromTemplate(note: Note) {
+        viewModelScope.launch {
+            try {
+                val noteId = insertNoteUseCase(note)
+                _createdNoteId.value = noteId
+            } catch (e: Exception) {
+                _error.value = "Failed to create note from template: ${e.message}"
+            }
+        }
+    }
+
+    fun clearCreatedNoteId() {
+        _createdNoteId.value = null
     }
 }
