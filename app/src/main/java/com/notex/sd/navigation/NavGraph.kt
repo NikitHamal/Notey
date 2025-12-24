@@ -11,11 +11,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.notex.sd.ui.screens.archive.ArchiveScreen
 import com.notex.sd.ui.screens.editor.EditorScreen
 import com.notex.sd.ui.screens.folder.FolderScreen
 import com.notex.sd.ui.screens.home.HomeScreen
 import com.notex.sd.ui.screens.onboarding.OnboardingScreen
+import com.notex.sd.ui.screens.onboarding.OnboardingViewModel
 import com.notex.sd.ui.screens.search.SearchScreen
 import com.notex.sd.ui.screens.settings.SettingsScreen
 import com.notex.sd.ui.screens.trash.TrashScreen
@@ -59,8 +61,10 @@ fun NoteXNavGraph(
             enterTransition = { fadeIn(animationSpec = tween(ANIMATION_DURATION)) },
             exitTransition = { fadeOut(animationSpec = tween(ANIMATION_DURATION)) }
         ) {
+            val viewModel: OnboardingViewModel = hiltViewModel()
             OnboardingScreen(
-                onComplete = {
+                appPreferences = viewModel.appPreferences,
+                onOnboardingComplete = {
                     navController.navigate(Route.Home) {
                         popUpTo(Route.Onboarding) { inclusive = true }
                     }

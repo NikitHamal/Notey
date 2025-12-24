@@ -263,16 +263,8 @@ private fun FolderTreeItem(
             selected = selectedFolderId == folderWithChildren.folder.id,
             onClick = { onFolderSelected(folderWithChildren.folder.id) },
             modifier = Modifier
-                .padding(
-                    start = NavigationDrawerItemDefaults.ItemPadding.calculateStartPadding(
-                        androidx.compose.ui.unit.LayoutDirection.Ltr
-                    ) + (level * 16.dp),
-                    end = NavigationDrawerItemDefaults.ItemPadding.calculateEndPadding(
-                        androidx.compose.ui.unit.LayoutDirection.Ltr
-                    ),
-                    top = 4.dp,
-                    bottom = 4.dp
-                )
+                .padding(NavigationDrawerItemDefaults.ItemPadding)
+                .padding(start = (level * 16).dp)
         )
 
         // Render children with animation
