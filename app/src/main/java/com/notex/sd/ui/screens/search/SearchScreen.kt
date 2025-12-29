@@ -3,6 +3,8 @@ package com.notex.sd.ui.screens.search
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +34,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,10 +42,14 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -61,16 +68,22 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notex.sd.R
+import com.notex.sd.domain.model.Folder
 import com.notex.sd.domain.model.Note
 import com.notex.sd.ui.components.common.EmptyState
 import com.notex.sd.ui.components.note.NoteCard
 import com.notex.sd.ui.components.note.NoteCardLayout
+import com.notex.sd.ui.components.search.DateRange
+import com.notex.sd.ui.components.search.ExpandedFilterPanel
+import com.notex.sd.ui.components.search.SearchFilterChips
+import com.notex.sd.ui.components.search.SearchFilters
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     onNavigateBack: () -> Unit,
     onNavigateToEditor: (String) -> Unit,
+    folders: List<Folder> = emptyList(),
     modifier: Modifier = Modifier,
     viewModel: SearchViewModel = hiltViewModel()
 ) {
@@ -78,9 +91,19 @@ fun SearchScreen(
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    // Filter state
+    var searchFilters by rememberSaveable { mutableStateOf(SearchFilters()) }
+    var showFilterPanel by rememberSaveable { mutableStateOf(false) }
+    val filterSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     // Auto-focus search field
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
+    }
+
+    // Apply filters to results
+    val filteredResults = remember(uiState.results, searchFilters) {
+        applyFilters(uiState.results, searchFilters)
     }
 
     Scaffold(
@@ -95,48 +118,121 @@ fun SearchScreen(
             )
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (uiState.hasQuery) {
-                // Show search results
-                if (uiState.hasResults) {
-                    SearchResults(
-                        notes = uiState.results,
-                        query = uiState.query,
-                        onNoteClick = { note ->
-                            keyboardController?.hide()
-                            onNavigateToEditor(note.id)
+            // Filter chips bar
+            SearchFilterChips(
+                filters = searchFilters,
+                onFiltersChange = { searchFilters = it },
+                onShowAllFilters = { showFilterPanel = true }
+            )
+
+            Box(modifier = Modifier.weight(1f)) {
+                if (uiState.hasQuery) {
+                    // Show search results
+                    if (filteredResults.isNotEmpty()) {
+                        SearchResults(
+                            notes = filteredResults,
+                            query = uiState.query,
+                            onNoteClick = { note ->
+                                keyboardController?.hide()
+                                onNavigateToEditor(note.id)
+                            },
+                            viewModel = viewModel
+                        )
+                    } else if (!uiState.isLoading) {
+                        // No results found
+                        EmptyState(
+                            icon = Icons.Outlined.Search,
+                            title = if (searchFilters.hasActiveFilters) {
+                                "No matching notes"
+                            } else {
+                                stringResource(R.string.search_no_results)
+                            },
+                            subtitle = if (searchFilters.hasActiveFilters) {
+                                "Try adjusting your filters"
+                            } else {
+                                "Try different keywords"
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                } else {
+                    // Show recent searches
+                    RecentSearches(
+                        recentSearches = uiState.recentSearches,
+                        onSearchClick = { query ->
+                            viewModel.selectRecentSearch(query)
                         },
-                        viewModel = viewModel
-                    )
-                } else if (!uiState.isLoading) {
-                    // No results found
-                    EmptyState(
-                        icon = Icons.Outlined.Search,
-                        title = stringResource(R.string.search_no_results),
-                        subtitle = "Try different keywords",
-                        modifier = Modifier.fillMaxSize()
+                        onRemoveSearch = { query ->
+                            viewModel.removeRecentSearch(query)
+                        },
+                        onClearAll = {
+                            viewModel.clearRecentSearches()
+                        }
                     )
                 }
-            } else {
-                // Show recent searches
-                RecentSearches(
-                    recentSearches = uiState.recentSearches,
-                    onSearchClick = { query ->
-                        viewModel.selectRecentSearch(query)
-                    },
-                    onRemoveSearch = { query ->
-                        viewModel.removeRecentSearch(query)
-                    },
-                    onClearAll = {
-                        viewModel.clearRecentSearches()
-                    }
-                )
             }
         }
+    }
+
+    // Filter bottom sheet
+    if (showFilterPanel) {
+        ModalBottomSheet(
+            onDismissRequest = { showFilterPanel = false },
+            sheetState = filterSheetState,
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            ExpandedFilterPanel(
+                filters = searchFilters,
+                folders = folders,
+                onFiltersChange = { searchFilters = it },
+                onDismiss = { showFilterPanel = false }
+            )
+        }
+    }
+}
+
+/**
+ * Applies search filters to the list of notes.
+ */
+private fun applyFilters(notes: List<Note>, filters: SearchFilters): List<Note> {
+    if (!filters.hasActiveFilters) return notes
+
+    return notes.filter { note ->
+        // Date range filter
+        val passesDateFilter = when (filters.dateRange) {
+            DateRange.ALL -> true
+            else -> {
+                filters.dateRange.daysAgo?.let { daysAgo ->
+                    val cutoffTime = System.currentTimeMillis() - (daysAgo * 24 * 60 * 60 * 1000L)
+                    note.modifiedAt >= cutoffTime
+                } ?: true
+            }
+        }
+
+        // Color filter
+        val passesColorFilter = filters.colors.isEmpty() || filters.colors.contains(note.color)
+
+        // Folder filter
+        val passesFolderFilter = filters.folders.isEmpty() ||
+                (note.folderId != null && filters.folders.contains(note.folderId))
+
+        // Archived filter
+        val passesArchivedFilter = filters.includeArchived || !note.isArchived
+
+        // Links filter
+        val passesLinksFilter = when (filters.hasLinks) {
+            true -> note.content.contains("[[") && note.content.contains("]]")
+            false -> !note.content.contains("[[")
+            null -> true
+        }
+
+        passesDateFilter && passesColorFilter && passesFolderFilter &&
+                passesArchivedFilter && passesLinksFilter
     }
 }
 

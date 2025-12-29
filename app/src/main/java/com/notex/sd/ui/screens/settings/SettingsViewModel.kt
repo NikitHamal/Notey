@@ -9,7 +9,10 @@ import com.notex.sd.core.preferences.ThemeMode
 import com.notex.sd.core.preferences.ViewMode
 import com.notex.sd.domain.model.Note
 import com.notex.sd.domain.usecase.CreateNoteUseCase
+import com.notex.sd.domain.usecase.ExportFormat
+import com.notex.sd.domain.usecase.ExportNotesUseCase
 import com.notex.sd.domain.usecase.GetAllNotesUseCase
+import com.notex.sd.domain.usecase.ImportNotesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,6 +82,8 @@ class SettingsViewModel @Inject constructor(
     private val appPreferences: AppPreferences,
     private val getAllNotesUseCase: GetAllNotesUseCase,
     private val createNoteUseCase: CreateNoteUseCase,
+    private val exportNotesUseCase: ExportNotesUseCase,
+    private val importNotesUseCase: ImportNotesUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -315,6 +320,43 @@ class SettingsViewModel @Inject constructor(
             } catch (e: Exception) {
                 _backupStatus.value = BackupStatus.Error(e.message ?: "Failed to restore notes")
                 _error.value = "Failed to restore notes: ${e.message}"
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun exportNotes(format: ExportFormat) {
+        viewModelScope.launch {
+            try {
+                _backupStatus.value = BackupStatus.InProgress
+                _isLoading.value = true
+
+                val fileName = exportNotesUseCase.generateExportFilename(format)
+                val downloadsDir = context.getExternalFilesDir(null) ?: context.filesDir
+                val exportFile = File(downloadsDir, fileName)
+
+                FileOutputStream(exportFile).use { outputStream ->
+                    val result = when (format) {
+                        ExportFormat.JSON -> exportNotesUseCase.exportToJson(outputStream)
+                        ExportFormat.MARKDOWN -> exportNotesUseCase.exportToMarkdown(outputStream)
+                        ExportFormat.PLAIN_TEXT -> exportNotesUseCase.exportToPlainText(outputStream)
+                    }
+
+                    if (result.success) {
+                        _backupStatus.value = BackupStatus.Success(
+                            "Exported ${result.noteCount} notes to ${exportFile.absolutePath}"
+                        )
+                    } else {
+                        _backupStatus.value = BackupStatus.Error(
+                            result.errorMessage ?: "Export failed"
+                        )
+                    }
+                }
+
+                _isLoading.value = false
+            } catch (e: Exception) {
+                _backupStatus.value = BackupStatus.Error(e.message ?: "Failed to export notes")
+                _error.value = "Failed to export notes: ${e.message}"
                 _isLoading.value = false
             }
         }

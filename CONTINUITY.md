@@ -1,94 +1,126 @@
-# Continuity Ledger - Notey App Enhancement
+# Continuity Ledger - Notey App Enhancement (Phase 2 COMPLETE)
 
 ## Goal (incl. success criteria):
 Transform Notey into a professional, production-grade note-taking app rivaling Notion/Obsidian
-- Fix critical crash: Note object in rememberSaveable causing IllegalStateException [DONE]
-- Fix CrashActivity: Add visible copy/restart buttons [DONE]
-- Redesign UI/UX: Modern, minimal, clean, professional, compact [IN PROGRESS]
-- Add unique USP features: Smart templates, note linking, quick actions [DONE]
-- Performance optimization: Fast, responsive, efficient [DONE]
-- Code quality: Modular (500-1000 LOC/file), production-grade [DONE]
-- Fix KSP migration build error [DONE]
+- **Phase 1 DONE:** Critical fixes, templates, quick actions, note linking foundation
+- **Phase 2 DONE:** Complete UI/UX overhaul, rich text editor, advanced features
+- Performance: Must be fast, responsive, <100ms interactions
+- Code quality: Modular (500-1000 LOC/file), production-grade, no TODOs
+- USP: Wiki-style note linking [[note]] with knowledge graph visualization
 
 ## Constraints/Assumptions:
 - Kotlin + Jetpack Compose (existing stack)
-- Offline-first architecture
-- Clean Architecture with MVVM pattern already in place
-- No external dependencies for core functionality
+- Offline-first architecture - NO cloud/database services
+- Clean Architecture with MVVM pattern
+- Room database for local persistence
+- Material 3 design system with dynamic theming
 - Must maintain backwards compatibility with existing notes
 
 ## Key decisions:
-- Store only noteId in saveable state, not full Note object [IMPLEMENTED]
-- CrashActivity redesigned with WindowInsets for edge-to-edge display [IMPLEMENTED]
-- Create new USP: Note Linking (wiki-style [[note]] links) - unique feature [IMPLEMENTED]
-- Add Quick Actions system for fast note creation [IMPLEMENTED]
-- Implement Smart Templates with categories [IMPLEMENTED]
-- Create compact, modern card design with better information density [EXISTING]
-- Use manual migrations instead of AutoMigration for production reliability [IMPLEMENTED]
+- **Phase 1 (DONE):**
+  - Fixed rememberSaveable crash (store noteId only)
+  - Manual DB migrations for production reliability
+  - Note Linking domain model with [[note]] syntax
+  - 8 built-in templates with categories
+  - Quick Actions FAB system
+- **Phase 2 (DONE):**
+  - Modern card-based home UI with masonry grid
+  - Rich text editor with markdown preview toggle
+  - Formatting toolbar (bold, italic, headers, lists, code)
+  - Note linking UI with clickable links + backlinks panel
+  - Advanced search with filters (date, color, folder)
+  - Export/Import system (JSON, Markdown, Plain Text)
+  - Focus Mode - distraction-free writing (USP enhancement)
 
 ## State:
-- Done:
-  - Fixed critical crash: Changed `var selectedNote by rememberSaveable` to store noteId only
-  - Fixed CrashActivity: Added proper WindowInsets padding, larger buttons, better layout
-  - Codebase analysis completed
-  - Note Linking domain model (NoteLink.kt) with wiki-style [[note]] syntax
-  - Note Link database entity and DAO
-  - Database migration from v1 to v2 with NoteLinkEntity
-  - Templates system with 8 built-in templates (Meeting Notes, Daily Journal, Project Plan, etc.)
-  - Template categories: Personal, Work, Creative
-  - Quick Actions system with expandable FAB
-  - Quick Actions UI component (QuickActionsFab, QuickActionsChipRow)
-  - Template Picker bottom sheet UI
-  - HomeScreen integration with Quick Actions FAB and Template picker
-  - HomeViewModel with createNoteFromTemplate() method
-  - Performance optimization - already using lazy loading, derivedStateOf, remember()
-  - Fixed KSP build error: Created v1 schema JSON and manual migration class
 
-- Now:
-  - COMPLETED - All core features implemented
+### Done (Phase 1):
+- ✓ Fixed critical crash: rememberSaveable stores noteId only
+- ✓ Fixed CrashActivity: WindowInsets padding, visible buttons
+- ✓ Note Linking domain model (NoteLink.kt)
+- ✓ Note Link database entity and DAO
+- ✓ Database migration v1→v2 with NoteLinkEntity
+- ✓ Templates system (8 built-in)
+- ✓ Quick Actions system with expandable FAB
+- ✓ Template Picker bottom sheet
+- ✓ HomeScreen integration with Quick Actions + Templates
+- ✓ KSP build error fixed with manual migrations
 
-- Next:
-  - Rich text editor with markdown preview
-  - Enhanced search with filters
-  - Note linking UI in editor
-  - Backlinks panel
-  - Export functionality
+### Done (Phase 2):
+- ✓ Enhanced design system with spacing tokens (Dimensions.kt)
+- ✓ Masonry/Staggered grid layout component (StaggeredGrid.kt)
+- ✓ Modern EnhancedNoteCard with compact appearance
+- ✓ Rich text FormattingToolbar with cursor-aware markdown formatting
+- ✓ MarkdownRenderer with full syntax support (bold, italic, code, lists, quotes, links)
+- ✓ BacklinksPanel showing notes that link to current note
+- ✓ SearchFilters with date range, color, folder, and toggle options
+- ✓ ExportImportUseCases (JSON, Markdown, Plain Text export/import)
+- ✓ FocusMode for distraction-free writing with themes and timer
+- ✓ Integrated EnhancedNoteCard and LazyMasonryGrid into NotesList
+- ✓ Integrated FormattingToolbar into EditorScreen (appears with keyboard)
+- ✓ Integrated FocusModeButton and FocusModeEditor into EditorScreen
+- ✓ Integrated SearchFilterChips and ExpandedFilterPanel into SearchScreen
+- ✓ Settings screen with full export options dialog (JSON/Markdown/Plain Text)
+- ✓ Settings screen with import options dialog
 
-## New Files Created:
-- app/src/main/java/com/notex/sd/domain/model/NoteLink.kt - Note linking domain model
-- app/src/main/java/com/notex/sd/domain/model/Template.kt - Templates domain model with BuiltInTemplates
-- app/src/main/java/com/notex/sd/domain/model/QuickAction.kt - Quick actions sealed class
-- app/src/main/java/com/notex/sd/data/database/entity/NoteLinkEntity.kt - Database entity for note links
-- app/src/main/java/com/notex/sd/data/database/dao/NoteLinkDao.kt - DAO for note links
-- app/src/main/java/com/notex/sd/ui/components/quickaction/QuickActionsBar.kt - Quick actions UI
-- app/src/main/java/com/notex/sd/ui/components/template/TemplatePickerSheet.kt - Template picker UI
-- app/src/main/java/com/notex/sd/data/database/migration/DatabaseMigrations.kt - Manual migration class
-- app/schemas/com.notex.sd.data.database.NoteXDatabase/1.json - Version 1 schema for migration
+### Next (Phase 3):
+- Knowledge graph visualization (advanced USP)
+- Swipe gestures for quick actions
+- Keyboard shortcuts
+- Widget support
+- Biometric lock for private notes
 
-## Files Modified:
-- app/src/main/java/com/notex/sd/ui/screens/home/HomeScreen.kt - Fixed crash, added Quick Actions FAB, Template picker
-- app/src/main/java/com/notex/sd/ui/screens/debug/CrashActivity.kt - Fixed button visibility
-- app/src/main/java/com/notex/sd/data/database/NoteXDatabase.kt - Removed AutoMigration, uses manual migration
-- app/src/main/java/com/notex/sd/di/DatabaseModule.kt - Added NoteLinkDao provider, manual migrations
-- app/src/main/java/com/notex/sd/ui/screens/home/HomeViewModel.kt - Added createNoteFromTemplate(), InsertNoteUseCase
-- app/src/main/java/com/notex/sd/domain/usecase/NoteUseCases.kt - Added InsertNoteUseCase
+## Files Created (Phase 2):
+- ✓ ui/theme/Dimensions.kt - Design system spacing tokens
+- ✓ ui/components/note/StaggeredGrid.kt - LazyMasonryGrid layout
+- ✓ ui/components/note/EnhancedNoteCard.kt - Modern card design with CompactNoteCard
+- ✓ ui/components/editor/FormattingToolbar.kt - Rich text formatting bar with MarkdownFormatter
+- ✓ ui/components/editor/MarkdownRenderer.kt - Markdown parsing and rendering
+- ✓ ui/components/editor/BacklinksPanel.kt - Backlinks display
+- ✓ ui/components/search/SearchFilters.kt - Filter chips and expanded panel
+- ✓ domain/usecase/ExportImportUseCases.kt - Export/Import functionality
+- ✓ ui/components/editor/FocusMode.kt - Distraction-free writing with themes
+
+## Files Modified (Phase 2):
+- ✓ NotesList.kt - Now uses LazyMasonryGrid, EnhancedNoteCard, CompactNoteCard
+- ✓ EditorScreen.kt - FormattingToolbar, FocusModeButton, FocusModeEditor
+- ✓ SearchScreen.kt - SearchFilterChips, ExpandedFilterPanel with filtering logic
+- ✓ SettingsScreen.kt - Export/Import dialogs with format selection
+- ✓ SettingsViewModel.kt - exportNotes(format) using ExportNotesUseCase
+
+## Phase 2 Component Summary:
+
+### UI Components Created:
+1. **LazyMasonryGrid** - Pinterest-style staggered grid with pinned items support
+2. **EnhancedNoteCard** - Modern card with link indicators, color theming
+3. **CompactNoteCard** - Minimal card for list view
+4. **FormattingToolbar** - Animated toolbar with bold, italic, heading, list, code, link buttons
+5. **MarkdownFormatter** - Cursor-aware markdown formatting application
+6. **MarkdownContent** - Full markdown renderer (headings, lists, code blocks, quotes, links)
+7. **BacklinksPanel** - Expandable panel showing bidirectional links
+8. **SearchFilterChips** - Horizontal scrolling quick filters
+9. **ExpandedFilterPanel** - Full filter bottom sheet
+10. **FocusModeEditor** - Full-screen distraction-free editor
+11. **FocusModeButton** - Compact trigger button
+12. **ExportOptionsDialog** - Format selection with JSON/Markdown/Plain Text
+13. **ImportOptionsDialog** - Import source selection
+
+### Export/Import Formats:
+- **JSON** - Full backup with NoteyExportData structure, folders, metadata
+- **Markdown** - Human-readable export organized by folder
+- **Plain Text** - Universal compatibility export
+
+### Focus Mode Features:
+- 4 themes: Dark, Light, Sepia, Deep Dark
+- Pomodoro-style timer with reset
+- Word count tracking
+- Word goal progress circle
+- Auto-hiding controls
+- System bar hiding for immersion
 
 ## Open questions:
 - None currently
 
-## Working set (files/ids/commands):
-- HomeScreen.kt [ENHANCED]
-- CrashActivity.kt [FIXED]
-- NoteLink.kt [NEW]
-- Template.kt [NEW]
-- QuickAction.kt [NEW]
-- QuickActionsBar.kt [NEW]
-- TemplatePickerSheet.kt [NEW]
-- NoteLinkEntity.kt [NEW]
-- NoteLinkDao.kt [NEW]
-- NoteXDatabase.kt [UPDATED]
-- DatabaseModule.kt [UPDATED]
-- HomeViewModel.kt [UPDATED]
-- NoteUseCases.kt [UPDATED]
-- DatabaseMigrations.kt [NEW]
-- 1.json schema [NEW]
+## Working set:
+- Phase 2 complete - all features implemented and integrated
+- Ready for Phase 3 planning

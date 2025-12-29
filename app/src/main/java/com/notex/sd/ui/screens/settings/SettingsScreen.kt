@@ -1,7 +1,10 @@
 package com.notex.sd.ui.screens.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,10 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Backup
@@ -20,7 +25,11 @@ import androidx.compose.material.icons.filled.Brightness6
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Restore
@@ -58,6 +67,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,6 +77,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.notex.sd.core.preferences.ThemeMode
 import com.notex.sd.core.preferences.ViewMode
+import com.notex.sd.domain.usecase.ExportFormat
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -82,6 +94,8 @@ fun SettingsScreen(
     var showThemeDialog by rememberSaveable { mutableStateOf(false) }
     var showViewModeDialog by rememberSaveable { mutableStateOf(false) }
     var showAboutDialog by rememberSaveable { mutableStateOf(false) }
+    var showExportDialog by rememberSaveable { mutableStateOf(false) }
+    var showImportDialog by rememberSaveable { mutableStateOf(false) }
 
     // Handle backup status
     LaunchedEffect(uiState.backupStatus) {
@@ -224,30 +238,35 @@ fun SettingsScreen(
 
             // Data Section
             item {
-                SettingsSectionHeader(title = "Data")
+                SettingsSectionHeader(title = "Data & Export")
             }
 
             item {
                 SettingsListItem(
-                    icon = Icons.Default.Backup,
-                    title = "Backup notes",
-                    subtitle = "Export all notes to JSON file",
-                    onClick = { viewModel.backupNotes() },
+                    icon = Icons.Default.FileDownload,
+                    title = "Export notes",
+                    subtitle = "Export to JSON, Markdown, or Plain Text",
+                    onClick = { showExportDialog = true },
                     showProgress = uiState.backupStatus is BackupStatus.InProgress
                 )
             }
 
             item {
                 SettingsListItem(
-                    icon = Icons.Default.Restore,
-                    title = "Restore notes",
-                    subtitle = "Import notes from backup file",
-                    onClick = {
-                        // TODO: Implement file picker for restore
-                        scope.launch {
-                            snackbarHostState.showSnackbar("File picker coming soon")
-                        }
-                    }
+                    icon = Icons.Default.FileUpload,
+                    title = "Import notes",
+                    subtitle = "Import from backup or Markdown file",
+                    onClick = { showImportDialog = true }
+                )
+            }
+
+            item {
+                SettingsListItem(
+                    icon = Icons.Default.Backup,
+                    title = "Quick backup",
+                    subtitle = "Create a JSON backup to app storage",
+                    onClick = { viewModel.backupNotes() },
+                    showProgress = uiState.backupStatus is BackupStatus.InProgress
                 )
             }
 
@@ -335,6 +354,36 @@ fun SettingsScreen(
 
     if (showAboutDialog) {
         AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+
+    if (showExportDialog) {
+        ExportOptionsDialog(
+            onExportSelected = { format ->
+                showExportDialog = false
+                viewModel.exportNotes(format)
+            },
+            onDismiss = { showExportDialog = false }
+        )
+    }
+
+    if (showImportDialog) {
+        ImportOptionsDialog(
+            onImportJson = {
+                showImportDialog = false
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        "To import: Place your backup file in the app's folder and use Quick Backup restore"
+                    )
+                }
+            },
+            onImportMarkdown = {
+                showImportDialog = false
+                scope.launch {
+                    snackbarHostState.showSnackbar("Markdown import coming soon")
+                }
+            },
+            onDismiss = { showImportDialog = false }
+        )
     }
 }
 
@@ -719,4 +768,278 @@ private fun AboutDialog(
             }
         }
     )
+}
+
+@Composable
+private fun ExportOptionsDialog(
+    onExportSelected: (ExportFormat) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var selectedFormat by remember { mutableStateOf(ExportFormat.JSON) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.FileDownload,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = {
+            Text(
+                text = "Export Notes",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Choose export format:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                ExportFormatOption(
+                    format = ExportFormat.JSON,
+                    title = "JSON Backup",
+                    description = "Full backup with all metadata. Best for restoring later.",
+                    icon = Icons.Default.Code,
+                    isSelected = selectedFormat == ExportFormat.JSON,
+                    onSelect = { selectedFormat = ExportFormat.JSON }
+                )
+
+                ExportFormatOption(
+                    format = ExportFormat.MARKDOWN,
+                    title = "Markdown",
+                    description = "Human-readable format. Great for sharing or other apps.",
+                    icon = Icons.Default.Description,
+                    isSelected = selectedFormat == ExportFormat.MARKDOWN,
+                    onSelect = { selectedFormat = ExportFormat.MARKDOWN }
+                )
+
+                ExportFormatOption(
+                    format = ExportFormat.PLAIN_TEXT,
+                    title = "Plain Text",
+                    description = "Simple text file. Universal compatibility.",
+                    icon = Icons.Default.Description,
+                    isSelected = selectedFormat == ExportFormat.PLAIN_TEXT,
+                    onSelect = { selectedFormat = ExportFormat.PLAIN_TEXT }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onExportSelected(selectedFormat) }) {
+                Text("Export")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun ExportFormatOption(
+    format: ExportFormat,
+    title: String,
+    description: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onSelect,
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = if (isSelected) 2.dp else 0.dp,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0f),
+                shape = RoundedCornerShape(12.dp)
+            )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (isSelected) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHighest
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = if (isSelected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Selected",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ImportOptionsDialog(
+    onImportJson: () -> Unit,
+    onImportMarkdown: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.FileUpload,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = {
+            Text(
+                text = "Import Notes",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Choose import source:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                ImportOptionCard(
+                    title = "JSON Backup",
+                    description = "Restore from a NoteX backup file",
+                    icon = Icons.Default.Restore,
+                    onClick = onImportJson
+                )
+
+                ImportOptionCard(
+                    title = "Markdown Files",
+                    description = "Import notes from .md files",
+                    icon = Icons.Default.Description,
+                    onClick = onImportMarkdown
+                )
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun ImportOptionCard(
+    title: String,
+    description: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
 }

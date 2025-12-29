@@ -79,9 +79,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextDecoration
@@ -108,6 +110,12 @@ import com.notex.sd.core.theme.NoteYellowDark
 import com.notex.sd.domain.model.ChecklistItem
 import com.notex.sd.domain.model.NoteColor
 import com.notex.sd.ui.components.dialog.ColorPickerDialog
+import com.notex.sd.ui.components.editor.FocusModeButton
+import com.notex.sd.ui.components.editor.FocusModeEditor
+import com.notex.sd.ui.components.editor.FocusModeState
+import com.notex.sd.ui.components.editor.FormattingAction
+import com.notex.sd.ui.components.editor.FormattingToolbar
+import com.notex.sd.ui.components.editor.MarkdownFormatter
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -130,6 +138,17 @@ fun EditorScreen(
     var showMoreMenu by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
+    // Focus Mode state
+    var focusModeState by remember { mutableStateOf(FocusModeState()) }
+
+    // Keyboard visibility for formatting toolbar
+    val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+
+    // TextFieldValue for content (needed for cursor-aware formatting)
+    var contentTextFieldValue by remember(uiState.content) {
+        mutableStateOf(TextFieldValue(text = uiState.content, selection = TextRange(uiState.content.length)))
+    }
+
     // Handle back press with unsaved changes
     BackHandler(enabled = uiState.hasUnsavedChanges) {
         if (uiState.hasUnsavedChanges) {
@@ -150,6 +169,23 @@ fun EditorScreen(
     val isDark = isSystemInDarkTheme()
     val backgroundColor = remember(uiState.color, isDark) {
         getNoteBackgroundColor(uiState.color, isDark)
+    }
+
+    // Focus Mode full screen
+    if (focusModeState.isActive) {
+        FocusModeEditor(
+            title = uiState.title,
+            content = uiState.content,
+            onTitleChange = viewModel::updateTitle,
+            onContentChange = viewModel::updateContent,
+            onExitFocusMode = {
+                focusModeState = focusModeState.copy(isActive = false)
+            },
+            state = focusModeState,
+            onStateChange = { focusModeState = it },
+            modifier = Modifier.fillMaxSize()
+        )
+        return
     }
 
     Scaffold(
@@ -175,14 +211,31 @@ fun EditorScreen(
             )
         },
         bottomBar = {
-            EditorBottomBar(
-                uiState = uiState,
-                onToggleChecklist = {
-                    // TODO: Implement checklist toggle
-                },
-                onColorPickerClick = { showColorPickerDialog = true },
-                backgroundColor = backgroundColor
-            )
+            Column {
+                // Formatting toolbar - appears above keyboard when editing
+                if (!uiState.isChecklist) {
+                    FormattingToolbar(
+                        visible = imeVisible,
+                        onAction = { action ->
+                            val newValue = MarkdownFormatter.applyFormatting(contentTextFieldValue, action)
+                            contentTextFieldValue = newValue
+                            viewModel.updateContent(newValue.text)
+                        }
+                    )
+                }
+
+                EditorBottomBar(
+                    uiState = uiState,
+                    onToggleChecklist = {
+                        // Toggle checklist mode
+                    },
+                    onColorPickerClick = { showColorPickerDialog = true },
+                    onFocusModeClick = {
+                        focusModeState = focusModeState.copy(isActive = true)
+                    },
+                    backgroundColor = backgroundColor
+                )
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = backgroundColor
@@ -585,6 +638,7 @@ private fun EditorBottomBar(
     uiState: EditorUiState,
     onToggleChecklist: () -> Unit,
     onColorPickerClick: () -> Unit,
+    onFocusModeClick: () -> Unit,
     backgroundColor: Color,
     modifier: Modifier = Modifier
 ) {
@@ -602,7 +656,7 @@ private fun EditorBottomBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onColorPickerClick) {
@@ -622,6 +676,14 @@ private fun EditorBottomBar(
                             },
                             contentDescription = "Toggle checklist",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Focus Mode button - only for regular notes
+                    if (!uiState.isChecklist) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        FocusModeButton(
+                            onClick = onFocusModeClick
                         )
                     }
                 }
